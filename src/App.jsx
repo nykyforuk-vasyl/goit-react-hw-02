@@ -1,24 +1,59 @@
-import "./App.css";
-import Profile from "./components/Profile/Profile.jsx";
-import FriendList from "./components/FriendList/FriendList.jsx";
-import TransactionHistory from "./components/TransactionHistory/TransactionHistory.jsx";
-
-import userData from "./assets/userData.json";
-import friends from "./assets/friends.json";
-import transactions from "./assets/transactions.json";
+import { useEffect, useState } from "react";
+import Description from "./components/Description/Description";
+import Feedback from "./components/Feedback/Feedback";
+import Options from "./components/Options/Options";
+import Notification from "./components/Notification/Notification";
 
 export default function App() {
+  const [counter, setCounter] = useState(
+    () =>
+      JSON.parse(window.localStorage.getItem("counter")) ?? {
+        good: 0,
+        neutral: 0,
+        bad: 0,
+      }
+  );
+
+  useEffect(() => {
+    window.localStorage.setItem("counter", JSON.stringify(counter));
+  }, [counter]);
+
+  const updateFeedback = (feedbackType) => {
+    setCounter({ ...counter, [feedbackType]: counter[feedbackType] + 1 });
+  };
+
+  const resetFeedback = () => {
+    setCounter({
+      good: 0,
+      neutral: 0,
+      bad: 0,
+    });
+  };
+
+  const totalFeedback = counter.good + counter.bad + counter.neutral;
+  const totalPercent = Math.round((counter.good / totalFeedback) * 100);
+
   return (
     <>
-      <Profile
-        name={userData.username}
-        tag={userData.tag}
-        location={userData.location}
-        image={userData.avatar}
-        stats={userData.stats}
+      <Description />
+
+      <Options
+        updFeedback={updateFeedback}
+        resetFeedback={resetFeedback}
+        totalFeedback={totalFeedback}
       />
-      <FriendList friends={friends} />
-      <TransactionHistory items={transactions} />
+
+      {totalFeedback > 0 ? (
+        <Feedback
+          goodCom={counter.good}
+          badCom={counter.bad}
+          neutralCom={counter.neutral}
+          totalFeedback={totalFeedback}
+          totalPercent={totalPercent}
+        />
+      ) : (
+        <Notification />
+      )}
     </>
   );
 }
